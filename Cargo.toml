@@ -1,0 +1,13 @@
+[package]
+name = "gamenetworkingsockets-rs"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+cxx = "1.0"
+autocxx = "0.13"
+
+[build-dependencies]
+autocxx-build = "0.13"
+cmake = "0.1"
+pkg-config = "0.3"
