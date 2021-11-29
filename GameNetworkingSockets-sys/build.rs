@@ -17,15 +17,17 @@ fn compile() -> String {
 fn generate_bindings(out_dir: String) {
 
     let include_dirs = vec![
+        "csrc".to_string(),
         format!("{}/include/GameNetworkingSockets/steam", out_dir),
     ];
 
-    let build = autocxx_build::Builder::new("src/lib.rs", &include_dirs)
-        .extra_clang_args(&["-std=c++14"])
-        .expect_build();
-    build.compile("gns-lib");
+    let mut build = cxx_build::bridge("src/lib.rs");
+    build
+        .includes(include_dirs)
+        .compile("gns-lib");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
+    println!("cargo:rerun-if-changed=csrc/gns.h");
 
     println!("cargo:rustc-link-search={}/lib", out_dir);
     println!("cargo:rustc-link-lib=GameNetworkingSockets_s");
