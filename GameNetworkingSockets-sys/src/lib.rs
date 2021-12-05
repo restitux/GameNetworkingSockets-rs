@@ -24,6 +24,7 @@ ctype_wrapper!(
     "Newtype wrapper for a long long"
 );
 ctype_wrapper!(c_uint, c_uint, "c_uint", "Newtype wrapper for a uint");
+ctype_wrapper!(c_char, c_char, "c_char", "Newytpe wrapper for a char");
 ctype_wrapper!(int64, c_longlong, "int64", "Newtype wrapper for int64");
 
 // Steam Types
@@ -32,6 +33,13 @@ ctype_wrapper!(
     c_uint,
     "HSteamListenSocket",
     "Newtype wrapper for HSteamListenSocket"
+);
+
+ctype_wrapper!(
+    HSteamNetConnection,
+    c_uint,
+    "HSteamNetConnection",
+    "Newtype wrapper for HSeamNetConnection"
 );
 
 ctype_wrapper!(
@@ -65,8 +73,19 @@ mod ffi {
     unsafe extern "C++" {
         type int64 = crate::int64;
         type c_void = crate::c_void;
+        type c_char = crate::c_char;
         type HSteamListenSocket = crate::HSteamListenSocket;
+        type HSteamNetConnection = crate::HSteamNetConnection;
         type HSteamNetPollGroup = crate::HSteamNetPollGroup;
+    }
+    struct InitReturn {
+        ret: bool,
+        err_msg: String,
+    }
+    unsafe extern "C++" {
+        include!("gns.h");
+        fn GameNetworkingSockets_Init_rs() -> InitReturn;
+        fn GameNetworkingSockets_Kill();
     }
     #[repr(u32)]
     #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -185,18 +204,102 @@ mod ffi {
         include!("gns.h");
         type EResult;
     }
-    struct InitReturn {
-        ret: bool,
-        errMsg: String,
+    #[repr(u32)]
+    #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+    pub enum ESteamNetworkingConfigValue {
+        k_ESteamNetworkingConfig_Invalid = 0,
+        k_ESteamNetworkingConfig_TimeoutInitial = 24,
+        k_ESteamNetworkingConfig_TimeoutConnected = 25,
+        k_ESteamNetworkingConfig_SendBufferSize = 9,
+        k_ESteamNetworkingConfig_ConnectionUserData = 40,
+        k_ESteamNetworkingConfig_SendRateMin = 10,
+        k_ESteamNetworkingConfig_SendRateMax = 11,
+        k_ESteamNetworkingConfig_NagleTime = 12,
+        k_ESteamNetworkingConfig_IP_AllowWithoutAuth = 23,
+        k_ESteamNetworkingConfig_MTU_PacketSize = 32,
+        k_ESteamNetworkingConfig_MTU_DataSize = 33,
+        k_ESteamNetworkingConfig_Unencrypted = 34,
+        k_ESteamNetworkingConfig_SymmetricConnect = 37,
+        k_ESteamNetworkingConfig_LocalVirtualPort = 38,
+        k_ESteamNetworkingConfig_FakePacketLoss_Send = 2,
+        k_ESteamNetworkingConfig_FakePacketLoss_Recv = 3,
+        k_ESteamNetworkingConfig_FakePacketLag_Send = 4,
+        k_ESteamNetworkingConfig_FakePacketLag_Recv = 5,
+        k_ESteamNetworkingConfig_FakePacketReorder_Send = 6,
+        k_ESteamNetworkingConfig_FakePacketReorder_Recv = 7,
+        k_ESteamNetworkingConfig_FakePacketReorder_Time = 8,
+        k_ESteamNetworkingConfig_FakePacketDup_Send = 26,
+        k_ESteamNetworkingConfig_FakePacketDup_Recv = 27,
+        k_ESteamNetworkingConfig_FakePacketDup_TimeMax = 28,
+        k_ESteamNetworkingConfig_PacketTraceMaxBytes = 41,
+        k_ESteamNetworkingConfig_FakeRateLimit_Send_Rate = 42,
+        k_ESteamNetworkingConfig_FakeRateLimit_Send_Burst = 43,
+        k_ESteamNetworkingConfig_FakeRateLimit_Recv_Rate = 44,
+        k_ESteamNetworkingConfig_FakeRateLimit_Recv_Burst = 45,
+        k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged = 201,
+        k_ESteamNetworkingConfig_Callback_AuthStatusChanged = 202,
+        k_ESteamNetworkingConfig_Callback_RelayNetworkStatusChanged = 203,
+        k_ESteamNetworkingConfig_Callback_MessagesSessionRequest = 204,
+        k_ESteamNetworkingConfig_Callback_MessagesSessionFailed = 205,
+        k_ESteamNetworkingConfig_Callback_CreateConnectionSignaling = 206,
+        k_ESteamNetworkingConfig_P2P_STUN_ServerList = 103,
+        k_ESteamNetworkingConfig_P2P_Transport_ICE_Enable = 104,
+        k_ESteamNetworkingConfig_P2P_Transport_ICE_Penalty = 105,
+        k_ESteamNetworkingConfig_P2P_Transport_SDR_Penalty = 106,
+        k_ESteamNetworkingConfig_SDRClient_ConsecutitivePingTimeoutsFailInitial = 19,
+        k_ESteamNetworkingConfig_SDRClient_ConsecutitivePingTimeoutsFail = 20,
+        k_ESteamNetworkingConfig_SDRClient_MinPingsBeforePingAccurate = 21,
+        k_ESteamNetworkingConfig_SDRClient_SingleSocket = 22,
+        k_ESteamNetworkingConfig_SDRClient_ForceRelayCluster = 29,
+        k_ESteamNetworkingConfig_SDRClient_DebugTicketAddress = 30,
+        k_ESteamNetworkingConfig_SDRClient_ForceProxyAddr = 31,
+        k_ESteamNetworkingConfig_SDRClient_FakeClusterPing = 36,
+        k_ESteamNetworkingConfig_EnumerateDevVars = 35,
     }
+
     unsafe extern "C++" {
         include!("gns.h");
-        fn GameNetworkingSockets_Init_rs() -> InitReturn;
-        fn GameNetworkingSockets_Kill();
+        type FnSteamNetConnectionStatusChanged;
+        type SteamNetConnectionStatusChangedCallback_t;
+        type ESteamNetworkingConfigValue;
     }
+
     unsafe extern "C++" {
         include!("gns.h");
         type SteamNetworkingConfigValue_t;
+        fn new_SteamNetworkingConfigValue_t() -> UniquePtr<SteamNetworkingConfigValue_t>;
+        fn new_SteamNetworkingConfigValue_t_Vector(
+        ) -> UniquePtr<CxxVector<SteamNetworkingConfigValue_t>>;
+        fn SteamNetworkingConfigValue_t_Vector_push(
+            vec: &UniquePtr<CxxVector<SteamNetworkingConfigValue_t>>,
+            val: UniquePtr<SteamNetworkingConfigValue_t>,
+        );
+        fn SetInt32(
+            self: Pin<&mut SteamNetworkingConfigValue_t>,
+            eVal: ESteamNetworkingConfigValue,
+            data: i32,
+        );
+        fn SetInt64(
+            self: Pin<&mut SteamNetworkingConfigValue_t>,
+            eVal: ESteamNetworkingConfigValue,
+            data: i64,
+        );
+        fn SetFloat(
+            self: Pin<&mut SteamNetworkingConfigValue_t>,
+            eVal: ESteamNetworkingConfigValue,
+            data: f32,
+        );
+        unsafe fn SetPtr(
+            self: Pin<&mut SteamNetworkingConfigValue_t>,
+            eVal: ESteamNetworkingConfigValue,
+            data: *mut c_void,
+        );
+        /// WARNING - Just saves your pointer.  Does NOT make a copy of the string
+        unsafe fn SetString(
+            self: Pin<&mut SteamNetworkingConfigValue_t>,
+            eVal: ESteamNetworkingConfigValue,
+            data: *const c_char,
+        );
     }
 
     unsafe extern "C++" {
@@ -217,6 +320,8 @@ mod ffi {
     unsafe extern "C++" {
         include!("gns.h");
         type SteamNetworkingIPAddr;
+        fn new_SteamNetworkingIPAddr() -> UniquePtr<SteamNetworkingIPAddr>;
+        //fn Clear(&mut self);
         fn Clear(self: Pin<&mut SteamNetworkingIPAddr>);
         fn IsIPv6AllZeros(&self) -> bool;
         fn SetIPv4(self: Pin<&mut SteamNetworkingIPAddr>, nIP: u32, nPort: u16);
@@ -234,12 +339,30 @@ mod ffi {
             nOptions: i32,
             pOptions: *const SteamNetworkingConfigValue_t,
         ) -> HSteamListenSocket;
-        fn CloseListenSocket(self: Pin<&'static mut ISteamNetworkingSockets>, hSocket: u32)
-            -> bool;
+        unsafe fn CreateListenSocketIP_Vector(
+            sns: *mut ISteamNetworkingSockets,
+            localAddress: &SteamNetworkingIPAddr,
+            Options: &UniquePtr<CxxVector<SteamNetworkingConfigValue_t>>,
+        ) -> HSteamListenSocket;
+         unsafe fn ConnectByIPAddress(
+            self: Pin<&'static mut ISteamNetworkingSockets>,
+            localAddress: &SteamNetworkingIPAddr,
+            nOptions: i32,
+            pOptions: *const SteamNetworkingConfigValue_t,
+        ) -> HSteamNetConnection;
+        unsafe fn ConnectByIPAddress_Vector(
+            sns: *mut ISteamNetworkingSockets,
+            localAddress: &SteamNetworkingIPAddr,
+            Options: &UniquePtr<CxxVector<SteamNetworkingConfigValue_t>>,
+        ) -> HSteamNetConnection;
+        fn CloseListenSocket(
+            self: Pin<&'static mut ISteamNetworkingSockets>,
+            hSocket: HSteamListenSocket,
+        ) -> bool;
         fn CreatePollGroup(self: Pin<&'static mut ISteamNetworkingSockets>) -> HSteamNetPollGroup;
         fn DestroyPollGroup(
             self: Pin<&'static mut ISteamNetworkingSockets>,
-            hPollGroup: u32,
+            hPollGroup: HSteamNetPollGroup,
         ) -> bool;
         unsafe fn ReceiveMessagesOnPollGroup(
             self: Pin<&'static mut ISteamNetworkingSockets>,
@@ -247,68 +370,31 @@ mod ffi {
             ppOutMessages: *mut *mut SteamNetworkingMessage_t,
             nMaxMessages: i32,
         ) -> i32;
+        fn RunCallbacks(self: Pin<&'static mut ISteamNetworkingSockets>);
     }
 }
 
 extern "C" {
     pub static HSteamListenSocket_Invalid: HSteamListenSocket;
+    pub static HSteamNetConnection_Invalid: HSteamNetConnection;
     pub static HSteamNetPollGroup_Invalid: HSteamNetPollGroup;
 }
 
-//unsafe impl cxx::ExternType for ffi::HSteamListenSocket {
-//    type Id = cxx::type_id!("uint32_t");
-//    type Kind = cxx::kind::Trivial;
-//}
-
-//unsafe impl cxx::ExternType for ffi::HSteamListenSocket {
-//        type Id = cxx::type_id!("uint32_t");
-//}
-
-//impl ffi::ISteamNetworkingSockets {
-//        pub fn create_listen_socket_ip(&mut self, local_address: &SteamNetworkingIPAddr, options: Vec<SteamNetworkingConfigValue_t>) {
-//                Pin::new_unchecked(self).CreateListenSocketIP(local_address)
-//        }
-//}
+impl ffi::SteamNetworkingConfigValue_t {
+    pub fn new() -> cxx::UniquePtr<SteamNetworkingConfigValue_t> {
+        new_SteamNetworkingConfigValue_t()
+    }
+    pub fn new_vec() -> cxx::UniquePtr<cxx::CxxVector<SteamNetworkingConfigValue_t>> {
+        new_SteamNetworkingConfigValue_t_Vector()
+    }
+}
 
 impl ffi::SteamNetworkingIPAddr {
-    pub fn new() -> ffi::SteamNetworkingIPAddr {
-        unsafe {
-            let mut val =
-                std::mem::MaybeUninit::<ffi::SteamNetworkingIPAddr>::uninit().assume_init();
-            Pin::new_unchecked(&mut val).Clear();
-            val
-        }
-    }
-    pub fn set_ipv4(&mut self, addr: std::net::SocketAddrV4) {
-        unsafe {
-            // octets is in little endian
-            let ip = std::mem::transmute::<[u8; 4], u32>(addr.ip().octets());
-            // swap to host order for passing to library
-            let ip = u32::from_be(ip);
-            Pin::new_unchecked(self).SetIPv4(ip, addr.port());
-        }
+    pub fn new() -> cxx::UniquePtr<ffi::SteamNetworkingIPAddr> {
+        let mut val = new_SteamNetworkingIPAddr();
+        val.pin_mut().Clear();
+        val
     }
 }
 
 pub use ffi::*;
-
-//pub use ffi::SteamNetworkingIPAddr;
-//pub use ffi::SteamNetworkingErrMsg;
-//use autocxx::include_cpp;
-//
-//include_cpp! {
-//    #include "steamnetworkingsockets.h"
-//    #include "isteamnetworkingsockets.h"
-//    #include "steamnetworkingtypes.h"
-//    safety!(unsafe)
-//    generate!("SteamDatagramErrMsg")
-//    generate!("SteamNetworkingErrMsg")
-//    generate!("ISteamNetworkingSockets")
-//    generate!("SteamNetworkingSockets")
-//    generate!("GameNetworkingSockets_Init")
-//    generate!("GameNetworkingSockets_Kill")
-//}
-
-//pub use ffi::SteamNetworkingSockets;
-//pub use ffi::GameNetworkingSockets_Init;
-//pub use ffi::GameNetworkingSockets_Kill;

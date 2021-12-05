@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 gamenetworkingsockets-sys = { path = "GameNetworkingSockets-sys" }
 eyre = "0.6"
+cxx = "1.0"
